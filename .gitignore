@@ -1,0 +1,5 @@
+# Build binary
+cdui
+
+# Claude Code
+.claude/
