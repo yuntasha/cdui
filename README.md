@@ -1,10 +1,18 @@
 # cdui
 
-Terminal UI for fast directory navigation. Browse and `cd` into directories interactively using a keyboard-driven TUI.
+Terminal UI for fast directory navigation. Browse directories and files interactively, `cd` into directories, and open files in vim — all from a keyboard-driven TUI.
 
 ## Installation
 
-### go install (recommended)
+### Quick Install (recommended)
+
+```bash
+bash <(curl -s https://raw.githubusercontent.com/yuntasha/cdui/main/install.sh)
+```
+
+This script automatically handles everything: build, binary install, PATH setup, and shell integration.
+
+### go install
 
 ```bash
 go install github.com/yuntasha/cdui@latest
@@ -22,7 +30,7 @@ The binary is installed to `~/.local/bin/`. Make sure this directory is in your 
 
 ## Shell Setup
 
-After installing the binary, add the following to your shell configuration so that `cdui` can change your working directory:
+If you used the quick install script, this is already done. Otherwise, add the following to your shell configuration:
 
 **zsh** (`~/.zshrc`):
 
@@ -40,7 +48,7 @@ Restart your shell or run `source ~/.zshrc` (or `~/.bashrc`) to apply.
 
 ## Usage
 
-Run `cdui` to start the directory browser from the current directory, or pass a path:
+Run `cdui` to start the browser from the current directory, or pass a path:
 
 ```bash
 cdui            # start from current directory
@@ -53,12 +61,12 @@ cdui ~/projects # start from ~/projects
 |-----|--------|
 | `j` / `↓` | Move cursor down |
 | `k` / `↑` | Move cursor up |
-| `l` / `→` / `Enter` | Open directory |
+| `l` / `→` / `Enter` | Open directory / open file in vim |
 | `h` / `←` / `Backspace` | Go to parent |
 | `Space` / `Tab` | Select current directory and `cd` |
 | `g` / `Home` | Go to top |
 | `G` / `End` | Go to bottom |
-| `.` | Toggle hidden directories |
+| `.` | Toggle hidden entries |
 | `q` / `Esc` / `Ctrl+C` | Quit without changing directory |
 
 ## Requirements
