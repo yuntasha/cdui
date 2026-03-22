@@ -25,6 +25,9 @@ var (
 	NormalStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#DDDDDD"))
 
+	FileStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#AAAAAA"))
+
 	ScrollIndicatorStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#666666")).
 				Padding(0, 3)

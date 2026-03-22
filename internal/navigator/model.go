@@ -2,11 +2,14 @@ package navigator
 
 import (
 	"fmt"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
 )
+
+type editorFinishedMsg struct{ err error }
 
 type Model struct {
 	currentDir  string
@@ -45,6 +48,12 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg.(type) {
+	case editorFinishedMsg:
+		m.loadEntries()
+		return m, nil
+	}
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -84,9 +93,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.clampViewport()
 			}
 
-		// Enter directory
+		// Enter directory or open file
 		case "enter", "right", "l":
 			if len(m.entries) > 0 {
+				entry := m.entries[m.cursor]
+				if !entry.IsDir {
+					return m, m.openFile(entry.Name)
+				}
 				m.enterDir()
 			}
 
@@ -114,6 +127,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+func (m *Model) openFile(name string) tea.Cmd {
+	filePath := filepath.Join(m.currentDir, name)
+	c := exec.Command("vim", filePath)
+	return tea.ExecProcess(c, func(err error) tea.Msg {
+		return editorFinishedMsg{err}
+	})
 }
 
 func (m *Model) enterDir() {
@@ -181,13 +202,13 @@ func (m Model) View() tea.View {
 	}
 	b.WriteString("\n")
 
-	// Subtitle: directory count and hidden status
-	dirCount := CountDirs(m.currentDir, m.showHidden)
-	hiddenStatus := "hidden dirs hidden"
+	// Subtitle: entry count and hidden status
+	dirCount, fileCount := CountEntries(m.currentDir, m.showHidden)
+	hiddenStatus := "hidden entries hidden"
 	if m.showHidden {
-		hiddenStatus = "hidden dirs shown"
+		hiddenStatus = "hidden entries shown"
 	}
-	subtitle := fmt.Sprintf(" %d directories | %s", dirCount, hiddenStatus)
+	subtitle := fmt.Sprintf(" %d dirs, %d files | %s", dirCount, fileCount, hiddenStatus)
 	b.WriteString(SubtitleStyle.Render(subtitle))
 	b.WriteString("\n\n")
 
@@ -210,9 +231,7 @@ func (m Model) View() tea.View {
 		for i := m.offset; i < end; i++ {
 			entry := m.entries[i]
 			name := entry.Name
-			if entry.IsDir && name != ".." {
-				name += "/"
-			} else if name == ".." {
+			if entry.IsDir {
 				name += "/"
 			}
 
@@ -220,6 +239,8 @@ func (m Model) View() tea.View {
 				b.WriteString(CursorStyle.Render(fmt.Sprintf("  > %s", name)))
 			} else if entry.Name == ".." {
 				b.WriteString(ParentStyle.Render(fmt.Sprintf("    %s", name)))
+			} else if !entry.IsDir {
+				b.WriteString(FileStyle.Render(fmt.Sprintf("    %s", name)))
 			} else {
 				b.WriteString(NormalStyle.Render(fmt.Sprintf("    %s", name)))
 			}
@@ -235,7 +256,7 @@ func (m Model) View() tea.View {
 
 	// Help bar
 	b.WriteString("\n")
-	help := " enter: open | space: select & cd | backspace: parent | .: hidden | q: quit"
+	help := " enter: open dir/vim | space: select & cd | backspace: parent | .: hidden | q: quit"
 	b.WriteString(HelpStyle.Render(help))
 
 	return tea.NewView(b.String())
